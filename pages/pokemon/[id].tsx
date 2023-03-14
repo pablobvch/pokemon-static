@@ -110,6 +110,7 @@ const PokemonPage: NextPage<Props> = ({ pokemon }) => {
 };
 
 // getStaticPath se ejecuta del server side
+// siempre necesita el staticProps
 export const getStaticPaths: GetStaticPaths = async (ctx) => {
   const pokemons151 = [...Array(151)].map((value, index) => `${index + 1}`);
 
@@ -117,18 +118,34 @@ export const getStaticPaths: GetStaticPaths = async (ctx) => {
     paths: pokemons151.map((id) => ({
       params: { id }
     })),
-    fallback: false // blocking deja pasar si el id no existe
+    // fallback: false
+    // blocking deja pasar si el id no existe
     // false si el id no esta en la lista, mostrar un 404
+    fallback: "blocking" // lo va a dejar pasar al nuevo
   };
 };
 
+//puede actuar solo. no hace falta definir el static path
 export const getStaticProps: GetStaticProps = async (ctx) => {
   const { id } = ctx.params as { id: string }; //esta forma es mas sencilla que tipar todo el ctx
 
+  const pokemon = await getPokemonInfo(id);
+
+  if (!pokemon) {
+    return {
+      redirect: {
+        destination: "/",
+        permanent: false
+      }
+    };
+    // redirect, redirige al usuario a otra pagina en build time
+  }
+
   return {
     props: {
-      pokemon: await getPokemonInfo(id)
-    }
+      pokemon
+    },
+    revalidate: 86400 // 24 horas. El tiempo esta en segundos. Poner numero, no un calculo para facilitar a next las cosas.
   };
 };
 

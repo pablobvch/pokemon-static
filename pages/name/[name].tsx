@@ -121,17 +121,20 @@ export const getStaticPaths: GetStaticPaths = async (ctx) => {
     paths: pokemonNames.map((name) => ({
       params: { name }
     })),
-    fallback: false
+    fallback: "blocking"
   };
 };
 
 export const getStaticProps: GetStaticProps = async (ctx) => {
   const { name } = ctx.params as { name: string }; //esta forma es mas sencilla que tipar todo el ctx
 
+  const pokemon = await getPokemonInfo(name);
+
   return {
     props: {
-      pokemon: await getPokemonInfo(name)
-    }
+      pokemon
+    },
+    revalidate: 86400
   };
 };
 
